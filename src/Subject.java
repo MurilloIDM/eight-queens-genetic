@@ -1,9 +1,9 @@
-public class Individual {
+public class Subject {
 
     private int note;
     private int[][] chessboard;
 
-    public Individual(int note, int[][] chessboard) {
+    public Subject(int note, int[][] chessboard) {
         this.note = note;
         this.chessboard = chessboard;
     }

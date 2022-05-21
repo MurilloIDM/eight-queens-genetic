@@ -1,10 +1,9 @@
-import java.awt.datatransfer.SystemFlavorMap;
-import java.util.Random;
+import java.util.*;
 
 public class Algorithm {
 
     private static int[][] population;
-    private static int[] notes;
+    private static List<Subject> populationWithNotes;
 
     public static void initialParams(int sizePopulation) {
         population = new int[sizePopulation][64];
@@ -29,8 +28,10 @@ public class Algorithm {
         }
     }
 
-    public static void evaluation() {
-        for (int individual = 0; individual < 1; individual++) {
+    public static void evaluation(int sizePopulation) {
+        List<Subject> subjects = new ArrayList<>();
+
+        for (int individual = 0; individual < sizePopulation; individual++) {
             int position = 0;
             int[][] chessboard = new int[8][8];
 
@@ -135,33 +136,26 @@ public class Algorithm {
                 }
             }
 
-            // Avaliar se existem na mesma coluna
-            // Avaliar se existem na mesma linha
-
-            System.out.println("Attack = " + attacks);
-            for (int line = 0; line < 8; line++) {
-                System.out.print("\n");
-                for (int column = 0; column < 8; column++) {
-                    System.out.print(chessboard[line][column] + " ");
-                }
-            }
+            Subject subject = new Subject(attacks, chessboard);
+            subjects.add(subject);
         }
+        populationWithNotes = subjects;
+    }
+
+    public static void ordination() {
+        Collections.sort(populationWithNotes, Comparator.comparing(Subject::getNote));
     }
 
     public static void viewPopulation(int sizePopulation) {
-        for (int line = 0; line < sizePopulation; line++) {
-            for (int column = 0; column < 64; column++) {
-                System.out.print(population[line][column] + " ");
-            }
-            System.out.print("\n");
+        for (int subject = 0; subject < sizePopulation; subject++) {
+            System.out.println("Ataque = " + populationWithNotes.get(subject).getNote());
         }
     }
 
-    public static void algorithm() {
+    public static void algorithm(int sizePopulation) {
         int generation = 0;
 
         int maxGenerations = 10;
-        int sizePopulation = 20;
         int sizePopulationResult = 0;
 
         int[][] populationResult = new int[sizePopulation][64];
@@ -169,7 +163,11 @@ public class Algorithm {
         initialParams(sizePopulation);
 
         generatePopulation(sizePopulation);
-        evaluation();
+        evaluation(sizePopulation);
+
+        ordination();
+
+        viewPopulation(sizePopulation);
 
 //        do {
 //            do {
@@ -181,7 +179,14 @@ public class Algorithm {
     }
 
     public static void main(String[] args) {
-        algorithm();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Informe o tamanho da população desejada: ");
+        int sizePopulation = scanner.nextInt();
+
+        // Solicitar limite de gerações, pc, pm
+
+        algorithm(sizePopulation);
     }
 
 }
