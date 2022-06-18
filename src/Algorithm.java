@@ -2,28 +2,75 @@ import java.util.*;
 
 public class Algorithm {
 
+    private static int generation;
+    private static int lastSubject;
     private static int[][] population;
+    private static int[][] newPopulation;
+    private static Subject subjectFather;
+    private static Subject subjectMother;
     private static List<Subject> populationWithNotes;
 
     public static void initialParams(int sizePopulation) {
+        lastSubject = 0;
         population = new int[sizePopulation][64];
+        newPopulation = new int[sizePopulation][64];
+    }
+
+    public static boolean verifyColumn(int actualColumn, int subject) {
+        boolean isValid = true;
+
+        int startColumn = 0;
+        int endColumn = 0;
+
+        if (actualColumn >= 0 && actualColumn <= 7) {
+            startColumn = 0;
+            endColumn = 8;
+        } else if (actualColumn >= 8 && actualColumn <= 15) {
+            startColumn = 8;
+            endColumn = 16;
+        } else if (actualColumn >= 16 && actualColumn <= 23) {
+            startColumn = 16;
+            endColumn = 24;
+        } else if (actualColumn >= 24 && actualColumn <= 31) {
+            startColumn = 24;
+            endColumn = 32;
+        } else if (actualColumn >= 32 && actualColumn <= 39) {
+            startColumn = 32;
+            endColumn = 40;
+        } else if (actualColumn >= 40 && actualColumn <= 47) {
+            startColumn = 40;
+            endColumn = 48;
+        } else if (actualColumn >= 48 && actualColumn <= 55) {
+            startColumn = 48;
+            endColumn = 56;
+        } else if (actualColumn >= 56 && actualColumn <= 63) {
+            startColumn = 56;
+            endColumn = 64;
+        }
+
+        for (int column = startColumn; column < endColumn; column++) {
+            if (population[subject][column] == 1) {
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 
     public static void generatePopulation(int sizePopulation) {
         Random random = new Random();
 
-        for (int line = 0; line < sizePopulation; line++) {
-            int aux = 100;
-            int queens = 0;
+        for (int subject = 0; subject < sizePopulation; subject++) {
+            int queens = 1;
 
-            while (queens != 8) {
+            while (queens <= 8) {
                 int column = random.nextInt(64);
+                boolean isValidColumn = verifyColumn(column, subject);
 
-                if (column != aux) {
-                    population[line][column] = 1;
-                    aux = column;
-                    queens++;
-                }
+                if (!isValidColumn) continue;
+
+                population[subject][column] = 1;
+                queens++;
             }
         }
     }
@@ -54,6 +101,7 @@ public class Algorithm {
                         if (column == k) continue;
                         if (chessboard[line][k] == 1) attacks += 1;
                     }
+
 
                     // Verificação de ataque na mesma coluna
                     for (int k = 0; k < 8; k++) {
@@ -146,36 +194,94 @@ public class Algorithm {
         Collections.sort(populationWithNotes, Comparator.comparing(Subject::getNote));
     }
 
-    public static void viewPopulation(int sizePopulation) {
-        for (int subject = 0; subject < sizePopulation; subject++) {
-            System.out.println("Ataque = " + populationWithNotes.get(subject).getNote());
+    public static void selection(int sizePopulation) {
+        Random random = new Random();
+
+        int halfPopulation = sizePopulation / 2;
+
+        int positionMother = random.nextInt(halfPopulation);
+        int positionFather = random.nextInt(sizePopulation);
+
+        while (positionFather == positionMother) {
+            positionFather = random.nextInt(sizePopulation);
+        }
+
+        Subject mother = populationWithNotes.get(positionMother);
+        Subject father = populationWithNotes.get(positionFather);
+
+        subjectMother = mother;
+        subjectFather = father;
+    }
+
+    public static void crossing() {
+        Random random = new Random();
+
+        for (int son = 0; son < 2; son++) {
+            int[] children = new int[64];
+
+            int firstPart = ((random.nextInt(8) + 1) * 8) - 1;
+            int secondPart = firstPart + 1;
+
+            int[] vectorMother = new int[64];
+            int[] vectorFather = new int[64];
+
+            int length = 0;
+            for (int line = 0; line < 8; line++) {
+                for (int column = 0; column < 8; column++) {
+                    vectorMother[length] = subjectMother.getChessboard()[line][column];
+                    vectorFather[length] = subjectFather.getChessboard()[line][column];
+                    length++;
+                }
+            }
+
+            for (int position = 0; position < 64; position++) {
+                if (position <= firstPart) {
+                    children[position] = vectorMother[position];
+                }
+
+                if (position >= secondPart) {
+                    children[position] = vectorFather[position];
+                }
+            }
+
+            newPopulation[lastSubject] = children;
+            lastSubject++;
         }
     }
 
-    public static void algorithm(int sizePopulation) {
-        int generation = 0;
+    public static void viewPopulation(int sizePopulation) {
+        System.out.printf("==========================================%n");
+        System.out.printf("= Qtd. nova população: %d               =%n", lastSubject);
+        System.out.printf("= Qtd. gerações: %d                      =%n", generation);
+        System.out.printf("==========================================%n");
 
-        int maxGenerations = 10;
-        int sizePopulationResult = 0;
+        System.out.printf("============ Melhor Indivíduo ============%n");
 
-        int[][] populationResult = new int[sizePopulation][64];
+        for (int line = 1; line <= 8; line++) {
+            for (int column = 1; column <= 8; column++) {
+                int columnView = (line * column) - 1;
+                System.out.print(newPopulation[0][columnView] + " ");
+            }
+            System.out.print("\n");
+        }
+    }
 
-        initialParams(sizePopulation);
+    public static void algorithm(int sizePopulation, int maxGenerations) {
+        do {
+            initialParams(sizePopulation);
+            generatePopulation(sizePopulation);
+            evaluation(sizePopulation);
+            ordination();
 
-        generatePopulation(sizePopulation);
-        evaluation(sizePopulation);
+            do {
+                selection(sizePopulation);
+                crossing();
+            } while(sizePopulation > lastSubject);
 
-        ordination();
+            generation++;
+        } while (generation < maxGenerations);
 
         viewPopulation(sizePopulation);
-
-//        do {
-//            do {
-//            } while(sizePopulation > sizePopulationResult);
-//
-//
-//        } while (generation < maxGenerations);
-
     }
 
     public static void main(String[] args) {
@@ -184,9 +290,17 @@ public class Algorithm {
         System.out.println("Informe o tamanho da população desejada: ");
         int sizePopulation = scanner.nextInt();
 
-        // Solicitar limite de gerações, pc, pm
+        if (sizePopulation == 1) {
+            System.out.println("O tamanho da população deve ser maior que 1.");
+            return;
+        }
 
-        algorithm(sizePopulation);
+        System.out.println("Informe a quantidade máxima de gerações possíveis: ");
+        int maxGenerations = scanner.nextInt();
+
+        // TODO: Solicitar PC e PM
+
+        algorithm(sizePopulation, maxGenerations);
     }
 
 }
