@@ -4,13 +4,15 @@ public class Algorithm {
 
     private static int generation;
     private static int lastSubject;
+    private static int sizePopulation;
+    private static int maxGenerations;
     private static int[][] population;
     private static int[][] newPopulation;
     private static Subject subjectFather;
     private static Subject subjectMother;
     private static List<Subject> populationWithNotes;
 
-    public static void initialParams(int sizePopulation) {
+    public static void initialParams() {
         lastSubject = 0;
         population = new int[sizePopulation][64];
         newPopulation = new int[sizePopulation][64];
@@ -57,7 +59,7 @@ public class Algorithm {
         return isValid;
     }
 
-    public static void generatePopulation(int sizePopulation) {
+    public static void generatePopulation() {
         Random random = new Random();
 
         for (int subject = 0; subject < sizePopulation; subject++) {
@@ -75,7 +77,7 @@ public class Algorithm {
         }
     }
 
-    public static void evaluation(int sizePopulation) {
+    public static void evaluation() {
         List<Subject> subjects = new ArrayList<>();
 
         for (int individual = 0; individual < sizePopulation; individual++) {
@@ -192,9 +194,11 @@ public class Algorithm {
 
     public static void ordination() {
         Collections.sort(populationWithNotes, Comparator.comparing(Subject::getNote));
+
+        System.out.println(populationWithNotes.get(0).getNote());
     }
 
-    public static void selection(int sizePopulation) {
+    public static void selection() {
         Random random = new Random();
 
         int halfPopulation = sizePopulation / 2;
@@ -249,7 +253,7 @@ public class Algorithm {
         }
     }
 
-    public static void viewPopulation(int sizePopulation) {
+    public static void viewPopulation() {
         System.out.printf("==========================================%n");
         System.out.printf("= Qtd. nova população: %d               =%n", lastSubject);
         System.out.printf("= Qtd. gerações: %d                      =%n", generation);
@@ -257,38 +261,48 @@ public class Algorithm {
 
         System.out.printf("============ Melhor Indivíduo ============%n");
 
-        for (int line = 1; line <= 8; line++) {
-            for (int column = 1; column <= 8; column++) {
-                int columnView = (line * column) - 1;
-                System.out.print(newPopulation[0][columnView] + " ");
+        for (int line = 0; line < 8; line++) {
+            for (int column = 0; column < 8; column++) {
+                System.out.print(populationWithNotes.get(0).getChessboard()[line][column] + " ");
             }
             System.out.print("\n");
         }
     }
 
-    public static void algorithm(int sizePopulation, int maxGenerations) {
+    public static void algorithm() {
+        initialParams();
+        generatePopulation();
+
         do {
-            initialParams(sizePopulation);
-            generatePopulation(sizePopulation);
-            evaluation(sizePopulation);
+            if (lastSubject == sizePopulation) {
+                System.out.println("Entrou aqui");
+                population = newPopulation;
+            }
+
+            lastSubject = 0;
+
+            evaluation();
             ordination();
 
             do {
-                selection(sizePopulation);
+                selection();
                 crossing();
+
+                // Adicionar tratativa para condição de poder acontecer o cruzamento
+                // Adicionar método de mutação e condição de acontecer a mutação
             } while(sizePopulation > lastSubject);
 
             generation++;
         } while (generation < maxGenerations);
 
-        viewPopulation(sizePopulation);
+        viewPopulation();
     }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Informe o tamanho da população desejada: ");
-        int sizePopulation = scanner.nextInt();
+        sizePopulation = scanner.nextInt();
 
         if (sizePopulation == 1) {
             System.out.println("O tamanho da população deve ser maior que 1.");
@@ -296,11 +310,11 @@ public class Algorithm {
         }
 
         System.out.println("Informe a quantidade máxima de gerações possíveis: ");
-        int maxGenerations = scanner.nextInt();
+        maxGenerations = scanner.nextInt();
 
         // TODO: Solicitar PC e PM
 
-        algorithm(sizePopulation, maxGenerations);
+        algorithm();
     }
 
 }
