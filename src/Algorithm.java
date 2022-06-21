@@ -194,8 +194,6 @@ public class Algorithm {
 
     public static void ordination() {
         Collections.sort(populationWithNotes, Comparator.comparing(Subject::getNote));
-
-        System.out.println(populationWithNotes.get(0).getNote());
     }
 
     public static void selection() {
@@ -259,7 +257,7 @@ public class Algorithm {
         System.out.printf("= Qtd. gerações: %d                      =%n", generation);
         System.out.printf("==========================================%n");
 
-        System.out.printf("============ Melhor Indivíduo ============%n");
+        System.out.printf("========= Melhor Indivíduo (%d) =========%n", populationWithNotes.get(0).getNote());
 
         for (int line = 0; line < 8; line++) {
             for (int column = 0; column < 8; column++) {
@@ -275,7 +273,6 @@ public class Algorithm {
 
         do {
             if (lastSubject == sizePopulation) {
-                System.out.println("Entrou aqui");
                 population = newPopulation;
             }
 
