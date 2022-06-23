@@ -2,6 +2,15 @@ import java.util.*;
 
 public class Algorithm {
 
+    // Data de entrega: 23/06/2022
+    // Grupo 01:
+    // Cristina Kochmann
+    // Gustavo Luiz Dutra Santos
+    // Murillo Isidoro de Medeiros
+    // Tulio Cesar Gontijo
+
+    private static double pc;
+    private static double pm;
     private static int generation;
     private static int lastSubject;
     private static int sizePopulation;
@@ -18,7 +27,26 @@ public class Algorithm {
         newPopulation = new int[sizePopulation][64];
     }
 
-    public static boolean verifyColumn(int actualColumn, int subject) {
+    public static int[] randomQueens() {
+        Random random = new Random();
+
+        int queens = 1;
+        int[] newSubject = new int[64];
+
+        while (queens <= 8) {
+            int column = random.nextInt(64);
+            boolean isValidColumn = verifyColumn(column, newSubject);
+
+            if (!isValidColumn) continue;
+
+            newSubject[column] = 1;
+            queens++;
+        }
+
+        return newSubject;
+    }
+
+    public static boolean verifyColumn(int actualColumn, int[] subject) {
         boolean isValid = true;
 
         int startColumn = 0;
@@ -51,7 +79,7 @@ public class Algorithm {
         }
 
         for (int column = startColumn; column < endColumn; column++) {
-            if (population[subject][column] == 1) {
+            if (subject[column] == 1) {
                 isValid = false;
             }
         }
@@ -67,7 +95,7 @@ public class Algorithm {
 
             while (queens <= 8) {
                 int column = random.nextInt(64);
-                boolean isValidColumn = verifyColumn(column, subject);
+                boolean isValidColumn = verifyColumn(column, population[subject]);
 
                 if (!isValidColumn) continue;
 
@@ -218,36 +246,62 @@ public class Algorithm {
     public static void crossing() {
         Random random = new Random();
 
-        for (int son = 0; son < 2; son++) {
-            int[] children = new int[64];
+        double pcRandom = random.nextDouble();
 
-            int firstPart = ((random.nextInt(8) + 1) * 8) - 1;
-            int secondPart = firstPart + 1;
+        int[] vectorMother = new int[64];
+        int[] vectorFather = new int[64];
 
-            int[] vectorMother = new int[64];
-            int[] vectorFather = new int[64];
-
-            int length = 0;
-            for (int line = 0; line < 8; line++) {
-                for (int column = 0; column < 8; column++) {
-                    vectorMother[length] = subjectMother.getChessboard()[line][column];
-                    vectorFather[length] = subjectFather.getChessboard()[line][column];
-                    length++;
-                }
+        int length = 0;
+        for (int line = 0; line < 8; line++) {
+            for (int column = 0; column < 8; column++) {
+                vectorMother[length] = subjectMother.getChessboard()[line][column];
+                vectorFather[length] = subjectFather.getChessboard()[line][column];
+                length++;
             }
+        }
 
-            for (int position = 0; position < 64; position++) {
-                if (position <= firstPart) {
-                    children[position] = vectorMother[position];
+        if (pcRandom < pc) {
+            for (int son = 0; son < 2; son++) {
+                int[] children = new int[64];
+
+                int firstPart = ((random.nextInt(8) + 1) * 8) - 1;
+                int secondPart = firstPart + 1;
+
+                for (int position = 0; position < 64; position++) {
+                    if (position <= firstPart) {
+                        children[position] = vectorMother[position];
+                    }
+
+                    if (position >= secondPart) {
+                        children[position] = vectorFather[position];
+                    }
                 }
 
-                if (position >= secondPart) {
-                    children[position] = vectorFather[position];
-                }
+                newPopulation[lastSubject] = children;
+                lastSubject++;
             }
-
-            newPopulation[lastSubject] = children;
+        } else {
+            newPopulation[lastSubject] = vectorFather;
             lastSubject++;
+            newPopulation[lastSubject] = vectorMother;
+            lastSubject++;
+        }
+    }
+
+    public static void mutation() {
+        Random random = new Random();
+
+        double pmRandom = random.nextDouble();
+
+        if (pmRandom < pm) {
+            int indexLastSon = lastSubject - 1;
+            int indexPenultimateSon = lastSubject - 2;
+
+            int[] lastSon = randomQueens();
+            int[] penultimateSon = randomQueens();
+
+            newPopulation[indexLastSon] = lastSon;
+            newPopulation[indexPenultimateSon] = penultimateSon;
         }
     }
 
@@ -284,9 +338,7 @@ public class Algorithm {
             do {
                 selection();
                 crossing();
-
-                // Adicionar tratativa para condição de poder acontecer o cruzamento
-                // Adicionar método de mutação e condição de acontecer a mutação
+                mutation();
             } while(sizePopulation > lastSubject);
 
             generation++;
@@ -296,6 +348,7 @@ public class Algorithm {
     }
 
     public static void main(String[] args) {
+        Locale.setDefault(Locale.US);
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Informe o tamanho da população desejada: ");
@@ -309,7 +362,11 @@ public class Algorithm {
         System.out.println("Informe a quantidade máxima de gerações possíveis: ");
         maxGenerations = scanner.nextInt();
 
-        // TODO: Solicitar PC e PM
+        System.out.println("Informe a probabilidade de cruzamento: ");
+        pc = scanner.nextDouble();
+
+        System.out.println("Informe a probabilidade de mutação: ");
+        pm = scanner.nextDouble();
 
         algorithm();
     }
